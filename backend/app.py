@@ -1,9 +1,13 @@
 from starlette.applications import Starlette
+from starlette.authentication import requires
 from starlette.exceptions import HTTPException
+from starlette.middleware import Middleware
+from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
+from auth.anonymous import AllAllowed
 from crypto import sign_device_csr
 from responses.error import bad_request
 from config.settings import Settings
@@ -17,7 +21,7 @@ from time import sleep
 
 
 
-
+@requires('authenticated')
 async def sign(request: Request):
     if await request.body() != b"":
         data = await request.json()
@@ -50,9 +54,11 @@ async def sign(request: Request):
     return bad_request("Missing request body")
     
     
-
+middleware = [
+    Middleware(AuthenticationMiddleware, backend=AllAllowed())
+]
 
 app = Starlette(debug=Settings.is_debug, routes=[
     Route('/sign', sign, methods=["POST"]),
-])
+], middleware=middleware)
 
