@@ -54,4 +54,4 @@ USER stealthy:stealthy
 
 COPY ./data/certs ../certs
 
-CMD ["/usr/bin/poetry", "run", "uvicorn", "app:app", "--reload"]
+CMD ["/usr/bin/poetry", "run", "uvicorn", "app:app", "--reload", "--host", "0.0.0.0"]

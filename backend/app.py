@@ -48,7 +48,8 @@ async def sign(request: Request):
         return JSONResponse({
             "root.crt": fields.root_crt,
             "sota.toml": await sota_toml_fmt(overrides, sota_config_dir),
-            "client.pem": fields.client_crt
+            "client.pem": fields.client_crt,
+            "client.chained": fields.client_crt + "\n" + Settings.CA_CRT.decode("utf-8"),
         }, status_code=201)
     
     return bad_request("Missing request body")

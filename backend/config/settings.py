@@ -1,6 +1,9 @@
 import os
+from cryptography import x509
+from cryptography.x509.extensions import SubjectAlternativeName
+from cryptography.x509.oid import ObjectIdentifier
+from cryptography.x509.general_name import DNSName
 from starlette.config import Config
-
 
 class _Settings():
     
@@ -48,7 +51,20 @@ class _Settings():
 
     @property
     def DEVICE_GATEWAY_SERVER(self):
-        self.config("DEVICE_GATEWAY_SERVER", default="")
+        if hasattr(self, '_device_gateway_server'):
+            return self._device_gateway_server
+        if self.config("DEVICE_GATEWAY_SERVER", default="") == "":
+            with open(os.path.join(self.config('CERTS_DIR'), "tls-crt"), "rb") as crt:
+                certificate = x509.load_pem_x509_certificate(crt.read())
+                ext = certificate.extensions.get_extension_for_oid(ObjectIdentifier('2.5.29.17'))
+                value: SubjectAlternativeName = ext.value
+                values: List[str] = value.get_values_for_type(DNSName)
+                for name in values:
+                    if "ota-lite" in name:
+                        self._device_gateway_server = f"https://{name}:8443"
+        else:
+            self._device_gateway_server = self.config("DEVICE_GATEWAY_SERVER")
+        return self._device_gateway_server
 
     @property
     def is_debug(self):
