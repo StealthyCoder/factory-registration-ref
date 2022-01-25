@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from registration_ref.settings import Settings
+from config.settings import Settings
 
 
 def _mk_config():
@@ -62,7 +62,7 @@ def _mk_config():
     )
 
 
-def sota_toml_fmt(hwid, overrides=None, sota_config_dir="/var/sota"):
+async def sota_toml_fmt(hwid, overrides=None, sota_config_dir="/var/sota"):
     d = _mk_config()
     if overrides:
         for section in overrides:

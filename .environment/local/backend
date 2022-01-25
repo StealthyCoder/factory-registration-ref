@@ -1,0 +1,5 @@
+DEVICES_DIR=/srv/http/logs/devices
+CERTS_DIR=/srv/certs
+API_TOKEN=
+# if FIO_API_TOKEN is provided, assign devices to a device-group
+DEVICE_GROUP=${DEVICE_GROUP-}

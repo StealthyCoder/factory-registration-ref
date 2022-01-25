@@ -2,6 +2,7 @@ import datetime
 from typing import NamedTuple, Tuple
 
 from cryptography import x509
+from cryptography.x509.base import load_pem_x509_csr, load_pem_x509_certificate
 from cryptography.x509.oid import NameOID  # type: ignore
 from cryptography.hazmat.backends.openssl.ec import _EllipticCurvePrivateKey
 from cryptography.hazmat.backends.openssl.x509 import _Certificate
@@ -12,26 +13,18 @@ from cryptography.hazmat.primitives.serialization import (
     PublicFormat,
 )
 
-from registration_ref.settings import Settings
+from config.settings import Settings
+from dto.device import DeviceInfo
 
 
-class DeviceInfo(NamedTuple):
-    namespace: str
-    root_crt: str
-    pubkey: str
-    client_crt: str
-    uuid: str
-
-
-def _key_pair() -> Tuple[_EllipticCurvePrivateKey, _Certificate]:
+async def _key_pair() -> Tuple[_EllipticCurvePrivateKey, _Certificate]:
     try:
         return _key_pair._cached  # type: ignore
     except AttributeError:
         pass
 
-    be = default_backend()
-    ca = be.load_pem_x509_certificate(Settings.CA_CRT.encode())
-    pk = be.load_pem_private_key(Settings.CA_KEY.encode(), None)
+    ca = load_pem_x509_certificate(Settings.CA_CRT)
+    pk = default_backend().load_pem_private_key(Settings.CA_KEY, None)
 
     # Make sure the Factory owner gave us a cert capable of signing CSRs
     try:
@@ -45,14 +38,14 @@ def _key_pair() -> Tuple[_EllipticCurvePrivateKey, _Certificate]:
     return _key_pair._cached  # type: ignore
 
 
-def sign_device_csr(csr: str) -> DeviceInfo:
-    cert = default_backend().load_pem_x509_csr(csr.encode())
+async def sign_device_csr(csr: str) -> DeviceInfo:
+    cert = load_pem_x509_csr(csr.encode())
     factory = cert.subject.get_attributes_for_oid(NameOID.ORGANIZATIONAL_UNIT_NAME)[
         0
     ].value
     uuid = cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
 
-    pk, ca = _key_pair()
+    pk, ca = await _key_pair()
     actual_factory = ca.subject.get_attributes_for_oid(
         NameOID.ORGANIZATIONAL_UNIT_NAME
     )[0].value
