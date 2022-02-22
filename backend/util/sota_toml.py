@@ -40,7 +40,7 @@ def _mk_config():
                 OrderedDict(
                     [
                         ("type", '"ostree+compose_apps"'),
-                        ("ostree_server", '"{ostree_server}/ostree"'),
+                        ("ostree_server", '"{ostree_server}/ostree"')
                     ]
                 ),
             ),

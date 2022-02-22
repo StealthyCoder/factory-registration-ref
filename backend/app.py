@@ -32,9 +32,14 @@ async def sign(request: Request):
         if not isinstance(csr, str):
             return bad_request("Data type of 'csr' is not string")
 
+        hwid = data.get("hardware-id")
+        if not hwid:
+            return bad_request("Missing required field 'hardware-id'")
+
         overrides = data.get("overrides") or {}
         sota_config_dir = data.get("sota-config-dir") or "/var/sota"
         name = data.get("name") or None
+
 
         try:
             fields = await sign_device_csr(csr)
@@ -47,7 +52,7 @@ async def sign(request: Request):
 
         return JSONResponse({
             "root.crt": fields.root_crt,
-            "sota.toml": await sota_toml_fmt(overrides, sota_config_dir),
+            "sota.toml": await sota_toml_fmt(hwid, overrides, sota_config_dir),
             "client.pem": fields.client_crt,
             "client.chained": fields.client_crt + "\n" + Settings.CA_CRT.decode("utf-8"),
         }, status_code=201)

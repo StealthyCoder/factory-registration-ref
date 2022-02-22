@@ -67,6 +67,24 @@ class _Settings():
         return self._device_gateway_server
 
     @property
+    def OSTREE_SERVER(self):
+        if hasattr(self, '_ostree_server'):
+            return self._ostree_server
+        ostree_hostname=$(openssl x509 -ext subjectAltName -noout -in ${CERTS_DIR}/tls-crt | grep -o "DNS:[^,]*ostree.foundries.io" | sed -e 's/^DNS://')
+        if self.config("OSTREE_SERVER", default="") == "":
+            with open(os.path.join(self.config('CERTS_DIR'), "tls-crt"), "rb") as crt:
+                certificate = x509.load_pem_x509_certificate(crt.read())
+                ext = certificate.extensions.get_extension_for_oid(ObjectIdentifier('2.5.29.17'))
+                value: SubjectAlternativeName = ext.value
+                values: List[str] = value.get_values_for_type(DNSName)
+                for name in values:
+                    if "ostree" in name:
+                        self._ostree_server = f"https://{name}:8443"
+        else:
+            self._ostree_server = self.config("OSTREE_SERVER")
+        return self._ostree_server
+
+    @property
     def is_debug(self):
         return self.config("STARLETTE_DEBUG", cast=bool, default=False)
 
