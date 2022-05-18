@@ -40,6 +40,11 @@ async def sign(request: Request):
         sota_config_dir = data.get("sota-config-dir") or "/var/sota"
         name = data.get("name") or None
 
+        if data.get("group"):
+            # Since we run w/o any authentication, allowing devices to determine
+            # their device group is too dangerous to allow by default. We instead
+            # allow a server defined config, Settings.DEVICE_GROUP.
+            return bad_request("Registration-reference does not support 'group' field")
 
         try:
             fields = await sign_device_csr(csr)
