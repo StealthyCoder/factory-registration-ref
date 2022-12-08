@@ -1,17 +1,14 @@
 version: '3.8'
-
 networks:
   stealthy_local:
-
 volumes:
   virtualenv_cache:
-
 services:
   reference_server:
     build:
       context: ./provision/docker/backend/local
       dockerfile: Dockerfile
-    user: ${DOCKER_UID:-1001}
+    user: ${DOCKER_UID:-1000}
     hostname: reference_server
     volumes:
       - ./backend:/srv/http

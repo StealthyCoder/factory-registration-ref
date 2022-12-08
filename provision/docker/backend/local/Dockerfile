@@ -1,4 +1,4 @@
-FROM debian:testing-slim@sha256:1df92377c2d1741923caf08058763672222331319fef61373edaba4bd0f64906
+FROM debian:testing-slim@sha256:bd11994e9931b5228121e5407c47f80d02e4ae8e6fd9a57fed3a3c81fb17e083
 LABEL maintainer="stealthycoder@stealthycoder.com"
 
 ENV POETRY_CACHE_DIR=/data/pypoetry
@@ -38,13 +38,13 @@ RUN apt update && \
     compgen -G **/*.sh > /dev/null && \
     for script in $(ls **/*.sh)\n\
     do\n\
-        tr -d ''"\\015"'' < "$script" > "/var/lib/augmented/$script"\n\
-        chmod +x "/var/lib/augmented/$script"\n\
-        "/var/lib/augmented/$script"\n\
+    tr -d ''"\\015"'' < "$script" > "/var/lib/augmented/$script"\n\
+    chmod +x "/var/lib/augmented/$script"\n\
+    "/var/lib/augmented/$script"\n\
     done\n\
     popd &>/dev/null\n\
     /bin/bash -l -c "$*" \n\
-' >> /srv/entrypoint.sh  && \
+    ' >> /srv/entrypoint.sh  && \
     chmod +x /srv/entrypoint.sh && \
     sed -i 's/-e //' /srv/entrypoint.sh
 
