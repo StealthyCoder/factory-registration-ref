@@ -6,10 +6,10 @@ authors = ["Eric Bode <eric.bode@foundries.io>"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-cryptography = "36.0.1"
-requests = "2.27.1"
-starlette = "0.18.0"
-uvicorn = "0.17.0"
+cryptography = "^36.0.1"
+requests = "^2.27.1"
+starlette = "^0.24.0"
+uvicorn = "^0.17.0"
 
 [tool.poetry.dev-dependencies]
 types-cryptography = "^3.3.23"
