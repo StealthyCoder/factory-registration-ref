@@ -1,8 +1,10 @@
 import logging
 import os
+
 from config.settings import Settings
 
 logging.basicConfig(level=logging.INFO)
+
 
 async def log_device(uuid: str, pubkey: str) -> None:
     # Keep a log of created devices
@@ -13,6 +15,7 @@ async def log_device(uuid: str, pubkey: str) -> None:
 async def log_msg(msg: str, name: str) -> None:
     logger = logging.getLogger(name)
     logger.info(msg)
+
 
 async def log_error(msg: str, name: str) -> None:
     logger = logging.getLogger(name)

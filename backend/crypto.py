@@ -1,23 +1,19 @@
 import datetime
-from typing import NamedTuple, Tuple
+from typing import Tuple, Type
 
 from cryptography import x509
-from cryptography.x509.base import load_pem_x509_csr, load_pem_x509_certificate
-from cryptography.x509.oid import NameOID  # type: ignore
-from cryptography.hazmat.backends.openssl.ec import _EllipticCurvePrivateKey
-from cryptography.hazmat.backends.openssl.x509 import _Certificate
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.backends.openssl.ec import _EllipticCurvePrivateKey
 from cryptography.hazmat.primitives.hashes import SHA256
-from cryptography.hazmat.primitives.serialization import (
-    Encoding,
-    PublicFormat,
-)
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+from cryptography.x509.base import load_pem_x509_certificate, load_pem_x509_csr
+from cryptography.x509.oid import NameOID  # type: ignore
 
 from config.settings import Settings
 from dto.device import DeviceInfo
 
 
-async def _key_pair() -> Tuple[_EllipticCurvePrivateKey, _Certificate]:
+async def _key_pair() -> Tuple[_EllipticCurvePrivateKey, x509.Certificate]:
     try:
         return _key_pair._cached  # type: ignore
     except AttributeError:
@@ -31,7 +27,7 @@ async def _key_pair() -> Tuple[_EllipticCurvePrivateKey, _Certificate]:
         ext = ca.extensions.get_extension_for_class(x509.BasicConstraints)
         if not ext.value.ca:
             raise ValueError("Factory not allowed to sign Device CSRs")
-    except x509.extensions.ExtensionNotFound:
+    except x509.extensions.ExtensionNotFound:  # type: ignore
         raise ValueError("Factory not allowed to sign Device CSRs")
 
     _key_pair._cached = (pk, ca)  # type: ignore
@@ -54,7 +50,7 @@ async def sign_device_csr(csr: str) -> DeviceInfo:
 
     signed = (
         x509.CertificateBuilder()
-        .subject_name(cert.subject)
+        .subject_name(cert.subject)  # type: ignore
         .serial_number(int("0x" + uuid.replace("-", ""), 16))
         .issuer_name(ca.subject)
         .public_key(cert.public_key())

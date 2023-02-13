@@ -1,3 +1,6 @@
+from time import sleep
+from typing import Optional
+
 from starlette.applications import Starlette
 from starlette.authentication import requires
 from starlette.exceptions import HTTPException
@@ -8,20 +11,15 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route
 
 from auth.anonymous import AllAllowed
+from config.settings import Settings
 from crypto import sign_device_csr
 from responses.error import bad_request
-from config.settings import Settings
-
 from util.foundries import create_in_foundries
-from util.logging import log_device, log_msg, log_error
+from util.logging import log_device, log_error, log_msg
 from util.sota_toml import sota_toml_fmt
 
-from typing import Optional
-from time import sleep
 
-
-
-@requires('authenticated')
+@requires("authenticated")
 async def sign(request: Request):
     if await request.body() != b"":
         data = await request.json()
@@ -55,21 +53,27 @@ async def sign(request: Request):
 
         await log_device(fields.uuid, fields.pubkey)
 
-        return JSONResponse({
-            "root.crt": fields.root_crt,
-            "sota.toml": await sota_toml_fmt(hwid, overrides, sota_config_dir),
-            "client.pem": fields.client_crt,
-            "client.chained": fields.client_crt + "\n" + Settings.CA_CRT.decode("utf-8"),
-        }, status_code=201)
-    
+        return JSONResponse(
+            {
+                "root.crt": fields.root_crt,
+                "sota.toml": await sota_toml_fmt(hwid, overrides, sota_config_dir),
+                "client.pem": fields.client_crt,
+                "client.chained": fields.client_crt
+                + "\n"
+                + Settings.CA_CRT.decode("utf-8"),
+            },
+            status_code=201,
+        )
+
     return bad_request("Missing request body")
-    
-    
-middleware = [
-    Middleware(AuthenticationMiddleware, backend=AllAllowed())
-]
 
-app = Starlette(debug=Settings.is_debug, routes=[
-    Route('/sign', sign, methods=["POST"]),
-], middleware=middleware)
 
+middleware = [Middleware(AuthenticationMiddleware, backend=AllAllowed())]
+
+app = Starlette(
+    debug=Settings.is_debug,
+    routes=[
+        Route("/sign", sign, methods=["POST"]),
+    ],
+    middleware=middleware,
+)

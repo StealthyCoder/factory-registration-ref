@@ -1,9 +1,10 @@
 import os
+from typing import List, Type
 
 from cryptography import x509
-from cryptography.x509.extensions import SubjectAlternativeName
+from cryptography.x509.extensions import SubjectAlternativeName  # type: ignore
 from cryptography.x509.general_name import DNSName
-from cryptography.x509.oid import ObjectIdentifier
+from cryptography.x509.oid import ObjectIdentifier  # type: ignore
 from starlette.config import Config
 
 
@@ -51,16 +52,16 @@ class _Settings:
         return self.config("DEVICE_GROUP", default="")
 
     @property
-    def DEVICE_GATEWAY_SERVER(self):
+    def DEVICE_GATEWAY_SERVER(self) -> str:
         if hasattr(self, "_device_gateway_server"):
-            return self._device_gateway_server
+            return self._device_gateway_server  # type: ignore
         if self.config("DEVICE_GATEWAY_SERVER", default="") == "":
             with open(os.path.join(self.config("CERTS_DIR"), "tls-crt"), "rb") as crt:
                 certificate = x509.load_pem_x509_certificate(crt.read())
                 ext = certificate.extensions.get_extension_for_oid(
                     ObjectIdentifier("2.5.29.17")
                 )
-                value: SubjectAlternativeName = ext.value
+                value: Type[SubjectAlternativeName] = ext.value
                 values: List[str] = value.get_values_for_type(DNSName)
                 for name in values:
                     if "ota-lite" in name:
@@ -70,9 +71,9 @@ class _Settings:
         return self._device_gateway_server
 
     @property
-    def OSTREE_SERVER(self):
+    def OSTREE_SERVER(self) -> str:
         if hasattr(self, "_ostree_server"):
-            return self._ostree_server
+            return self._ostree_server  # type: ignore
         if self.config("OSTREE_SERVER", default="") == "":
             with open(os.path.join(self.config("CERTS_DIR"), "tls-crt"), "rb") as crt:
                 certificate = x509.load_pem_x509_certificate(crt.read())
