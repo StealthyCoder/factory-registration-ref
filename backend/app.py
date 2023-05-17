@@ -15,7 +15,7 @@ from config.settings import Settings
 from crypto import sign_device_csr
 from responses.error import bad_request
 from util.foundries import create_in_foundries
-from util.logging import log_device, log_error, log_msg
+from util.logging import log_device, log_error
 from util.sota_toml import sota_toml_fmt
 
 
