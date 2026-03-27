@@ -1,10 +1,12 @@
 import os
-from typing import List, Type
+from typing import List, cast
 
 from cryptography import x509
-from cryptography.x509.extensions import SubjectAlternativeName  # type: ignore
+from cryptography.x509.extensions import (  # type: ignore
+    Extension,
+    SubjectAlternativeName,
+)
 from cryptography.x509.general_name import DNSName
-from cryptography.x509.oid import ObjectIdentifier  # type: ignore
 from starlette.config import Config
 
 
@@ -58,10 +60,13 @@ class _Settings:
         if self.config("DEVICE_GATEWAY_SERVER", default="") == "":
             with open(os.path.join(self.config("CERTS_DIR"), "tls-crt"), "rb") as crt:
                 certificate = x509.load_pem_x509_certificate(crt.read())
-                ext = certificate.extensions.get_extension_for_oid(
-                    ObjectIdentifier("2.5.29.17")
+                ext = cast(
+                    Extension[SubjectAlternativeName],
+                    certificate.extensions.get_extension_for_oid(
+                        x509.OID_SUBJECT_ALTERNATIVE_NAME
+                    ),
                 )
-                value: Type[SubjectAlternativeName] = ext.value
+                value: SubjectAlternativeName = ext.value
                 values: List[str] = value.get_values_for_type(DNSName)
                 for name in values:
                     if "ota-lite" in name:
@@ -77,8 +82,11 @@ class _Settings:
         if self.config("OSTREE_SERVER", default="") == "":
             with open(os.path.join(self.config("CERTS_DIR"), "tls-crt"), "rb") as crt:
                 certificate = x509.load_pem_x509_certificate(crt.read())
-                ext = certificate.extensions.get_extension_for_oid(
-                    ObjectIdentifier("2.5.29.17")
+                ext = cast(
+                    Extension[SubjectAlternativeName],
+                    certificate.extensions.get_extension_for_oid(
+                        x509.OID_SUBJECT_ALTERNATIVE_NAME
+                    ),
                 )
                 value: SubjectAlternativeName = ext.value
                 values: List[str] = value.get_values_for_type(DNSName)

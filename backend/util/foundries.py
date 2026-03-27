@@ -23,6 +23,7 @@ async def create_in_foundries(
     headers: dict = {
         "OSF-TOKEN": api_token,
     }
+    msg = ""
     for x in (0.1, 0.2, 1):
         r = requests.put(
             "https://api.foundries.io/ota/devices/", headers=headers, json=data

@@ -1,11 +1,15 @@
 import datetime
-from typing import Tuple, Type
+from typing import Tuple
 
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.backends.openssl.ec import _EllipticCurvePrivateKey
+from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePrivateKey
 from cryptography.hazmat.primitives.hashes import SHA256
-from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
+from cryptography.hazmat.primitives.serialization import (
+    Encoding,
+    PublicFormat,
+    load_pem_private_key,
+)
 from cryptography.x509.base import load_pem_x509_certificate, load_pem_x509_csr
 from cryptography.x509.oid import NameOID  # type: ignore
 
@@ -13,14 +17,14 @@ from config.settings import Settings
 from dto.device import DeviceInfo
 
 
-async def _key_pair() -> Tuple[_EllipticCurvePrivateKey, x509.Certificate]:
+async def _key_pair() -> Tuple[EllipticCurvePrivateKey, x509.Certificate]:
     try:
         return _key_pair._cached  # type: ignore
     except AttributeError:
         pass
 
     ca = load_pem_x509_certificate(Settings.CA_CRT)
-    pk = default_backend().load_pem_private_key(Settings.CA_KEY, None)
+    pk = load_pem_private_key(Settings.CA_KEY, None)
 
     # Make sure the Factory owner gave us a cert capable of signing CSRs
     try:
@@ -39,7 +43,7 @@ async def sign_device_csr(csr: str) -> DeviceInfo:
     factory = cert.subject.get_attributes_for_oid(NameOID.ORGANIZATIONAL_UNIT_NAME)[
         0
     ].value
-    uuid = cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+    uuid = str(cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value)
 
     pk, ca = await _key_pair()
     actual_factory = ca.subject.get_attributes_for_oid(
@@ -51,11 +55,13 @@ async def sign_device_csr(csr: str) -> DeviceInfo:
     signed = (
         x509.CertificateBuilder()
         .subject_name(cert.subject)  # type: ignore
-        .serial_number(int("0x" + uuid.replace("-", ""), 16))
+        .serial_number(int("0x" + str(uuid.replace("-", "")), 16))
         .issuer_name(ca.subject)
         .public_key(cert.public_key())
-        .not_valid_before(datetime.datetime.utcnow())
-        .not_valid_after(datetime.datetime.utcnow() + datetime.timedelta(days=7300))
+        .not_valid_before(datetime.datetime.now(datetime.timezone.utc))
+        .not_valid_after(
+            datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7300)
+        )
         .add_extension(
             x509.KeyUsage(
                 digital_signature=True,
@@ -71,7 +77,7 @@ async def sign_device_csr(csr: str) -> DeviceInfo:
             critical=True,
         )
         .add_extension(
-            x509.ExtendedKeyUsage([x509.ExtendedKeyUsageOID.CLIENT_AUTH]),
+            x509.ExtendedKeyUsage([x509.ExtendedKeyUsage.oid]),
             critical=True,
         )
         .sign(pk, SHA256(), default_backend())
@@ -82,5 +88,9 @@ async def sign_device_csr(csr: str) -> DeviceInfo:
     )
 
     return DeviceInfo(
-        factory, Settings.ROOT_CRT, public_bytes.decode(), signed_bytes.decode(), uuid
+        str(factory),
+        Settings.ROOT_CRT,
+        public_bytes.decode(),
+        signed_bytes.decode(),
+        uuid,
     )

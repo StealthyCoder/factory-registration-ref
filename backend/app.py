@@ -1,9 +1,5 @@
-from time import sleep
-from typing import Optional
-
 from starlette.applications import Starlette
 from starlette.authentication import requires
-from starlette.exceptions import HTTPException
 from starlette.middleware import Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.requests import Request
@@ -15,7 +11,7 @@ from config.settings import Settings
 from crypto import sign_device_csr
 from responses.error import bad_request
 from util.foundries import create_in_foundries
-from util.logging import log_device, log_error
+from util.logging import log_device
 from util.sota_toml import sota_toml_fmt
 
 

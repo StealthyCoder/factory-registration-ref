@@ -1,5 +1,4 @@
-from starlette.authentication import (AuthCredentials, AuthenticationBackend,
-                                      SimpleUser)
+from starlette.authentication import AuthCredentials, AuthenticationBackend, SimpleUser
 
 
 class AllAllowed(AuthenticationBackend):
