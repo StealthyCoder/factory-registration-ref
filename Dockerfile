@@ -16,4 +16,4 @@ COPY --from=build /usr/local/bin/flask /usr/bin/
 COPY ./registration_ref /srv/factory-registration-ref/registration_ref
 COPY ./docker_run.sh /
 
-CMD /docker_run.sh
+ENTRYPOINT ["/docker_run.sh"]
